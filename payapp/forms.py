@@ -1,3 +1,4 @@
+# from django.core.exceptions import ValidationError
 from django import forms
 # from .models import Accountant
 from django.contrib.auth.forms import UserCreationForm
@@ -11,6 +12,13 @@ class UserStaffForm(UserCreationForm):
     class meta:
         model = User
         fields = ['email','username','password1','password2','admin_status']
+    
+    def clean_email(self):
+        email = self.cleaned_data.get('email')
+        if User.objects.filter(email=email).exists():
+            raise forms.ValidationError("This email is already used")
+        return email    
+    
     def save(self, commit=True):
         user = super(UserStaffForm, self).save(commit=False)
         user.email = self.cleaned_data['email']
@@ -30,8 +38,15 @@ class UserEmployeeForm(UserCreationForm):
     class meta:
         model = User
         fields = ['email','username','password1','password2']
+        
+    def clean_email(self):
+        email = self.cleaned_data.get('email')
+        if User.objects.filter(email=email).exists():
+            raise forms.ValidationError("This email is already used")
+        return email
+    
     def save(self, commit=True):
-        user = super(UserStaffForm, self).save(commit=False)
+        user = super(UserEmployeeForm, self).save(commit=False)
         user.email = self.cleaned_data['email']
         if commit:
             user.save()
@@ -40,4 +55,4 @@ class UserEmployeeForm(UserCreationForm):
 class EmployeeForm(forms.ModelForm):
     class Meta:
         model = Employee
-        fields = ['pf_percent']
+        fields = ['pf_percent','accountant','position']
