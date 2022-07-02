@@ -2,14 +2,18 @@ from django.shortcuts import render, redirect
 from django.http import HttpResponse
 from ..forms import UserStaffForm, PositionForm
 from django.contrib.auth.forms import AuthenticationForm
-from django.contrib.auth import login, authenticate
+from django.contrib.auth import login, authenticate, logout
 from ..models import Accountant, Position
 from django.views.generic import CreateView, ListView, DetailView, DeleteView,UpdateView
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.urls import reverse,reverse_lazy
+from django.contrib.auth.decorators import login_required
+from django.utils.decorators import method_decorator
+
 # Create your views here.
 
 def index(request):
-    return HttpResponse("Hello world");
+    return render(request, 'payapp/home_page.html');
 
 def accountant_creation(request): 
     if request.method == "POST":
@@ -18,6 +22,7 @@ def accountant_creation(request):
             accountant = user_form.save()
             Accountant.objects.create(accountant = accountant)
             print("accountant created sucessfully.")
+            return redirect('payapp:login')
     elif request.method =="GET":
         user_form = UserStaffForm()
     context = {'user':user_form}
@@ -34,29 +39,40 @@ def login_user(request):
             if user is not None:
                 login(request, user)
                 print("logged in")
+                return redirect('payapp:index')
     elif request.method == "GET":
             form = AuthenticationForm()
     context = {'user':form}
     return render(request, 'payapp/accountant_register.html',context)
 
 
-class PositionCreateView(CreateView):
+@method_decorator(login_required(login_url=reverse_lazy('payapp:login')),name="dispatch")
+class PositionCreateView(CreateView,LoginRequiredMixin):
     model = Position
     form_class = PositionForm
     success_url = reverse_lazy('payapp:position_list')
+    # login_url = reverse_lazy('payapp:login')
     
-
+@method_decorator(login_required(login_url=reverse_lazy('payapp:login')),name="dispatch")
 class PositionListView(ListView):
     model = Position
     context_object_name = 'positions'
-    
-class PositionDetailView(DetailView):
+
+@method_decorator(login_required(login_url=reverse_lazy('payapp:login')),name="dispatch")
+class PositionDetailView(LoginRequiredMixin,DetailView):
     model = Position
     pk_url_kwarg= 'id'
     context_object_name='object'
 
-class PositionUpdateView(UpdateView):
+@method_decorator(login_required(login_url=reverse_lazy('payapp:login')),name="dispatch")
+class PositionUpdateView(LoginRequiredMixin,UpdateView):
     model = Position
     form_class = PositionForm
     pk_url_kwarg= 'id'
     success_url = reverse_lazy('payapp:position_list')
+    
+    
+@login_required
+def logout_view(request):
+    logout(request)
+    return redirect('payapp:index')

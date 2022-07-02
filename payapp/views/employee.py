@@ -1,9 +1,15 @@
 from django.shortcuts import render, redirect
+from django.urls import reverse,reverse_lazy
 from ..forms import UserEmployeeForm, EmployeeForm
 import stripe
+from ..models import Employee
+from django.contrib.auth.decorators import login_required
+
+
 stripe.api_key = "sk_test_51LFDP4IhxTYC5XjyJ4mJo4Zc48CSnR89ZPCb4RRqdBALg1cQQajUZWFV1m3GvxJlLQOvNQo3AYGOXyxO8F7UpPaY00Gdo1cwvA"
 
 
+@login_required(login_url=reverse_lazy('payapp:login'))
 def employee_creation(request): 
     if request.method == "POST":
         user_form = UserEmployeeForm(request.POST)
@@ -28,7 +34,9 @@ def employee_creation(request):
     return render(request, 'payapp/employee_register.html',context)
 
 
-
-
-
-# print(val['business_profile'])
+@login_required(login_url=reverse_lazy('payapp:login'))
+def view_employee(request):
+    context = {}
+    employees = Employee.objects.all()
+    context['employees']= employees
+    return render(request,'payapp/employee_list.html',context)
