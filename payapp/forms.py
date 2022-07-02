@@ -3,7 +3,7 @@ from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
 from django.contrib.auth import get_user_model
-from .models import Position
+from .models import Employee, Position
 
 class UserStaffForm(UserCreationForm):
     email = forms.EmailField()
@@ -36,3 +36,8 @@ class UserEmployeeForm(UserCreationForm):
         if commit:
             user.save()
         return user
+    
+class EmployeeForm(forms.ModelForm):
+    class Meta:
+        model = Employee
+        fields = ['pf_percent']
