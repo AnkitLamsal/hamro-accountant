@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect
 from django.http import HttpResponse
-from ..forms import UserStaffForm, PositionForm
+from ..forms import UserStaffForm, PositionForm, UserEditForm
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth import login, authenticate, logout
 from ..models import Accountant, Position
@@ -9,6 +9,11 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.urls import reverse,reverse_lazy
 from django.contrib.auth.decorators import login_required
 from django.utils.decorators import method_decorator
+from django.contrib.auth.forms import PasswordChangeForm
+from django.contrib import messages
+from django.contrib.auth import update_session_auth_hash
+
+
 
 # Create your views here.
 
@@ -19,8 +24,9 @@ def accountant_creation(request):
     if request.method == "POST":
         user_form = UserStaffForm(request.POST)
         if user_form.is_valid():
+            print(user_form.cleaned_data)
             accountant = user_form.save()
-            Accountant.objects.create(accountant = accountant)
+            Accountant.objects.create(accountant = accountant, is_admin=user_form.cleaned_data['admin_status'])
             print("accountant created sucessfully.")
             return redirect('payapp:login')
     elif request.method =="GET":
@@ -76,3 +82,38 @@ class PositionUpdateView(LoginRequiredMixin,UpdateView):
 def logout_view(request):
     logout(request)
     return redirect('payapp:index')
+
+
+def change_password(request):
+    if(request.method == "POST"):
+        form = PasswordChangeForm(request.user, request.POST)
+        if form.is_valid():
+            user = form.save()
+            update_session_auth_hash(request, user)
+            return redirect('payapp:index')
+        else:
+            messages.error(request, 'Please correct the error below.')
+    else:
+        form = PasswordChangeForm(request.user)
+    return render(request, 'payapp/change_password.html', {'form':form})
+
+
+def accountant_update(request):
+    context = {}
+    user = request.user
+    if request.method == "GET":
+        form = UserEditForm(instance=user)
+        context['form'] = form
+    elif request.method == "POST":
+        form = UserEditForm(request.POST, instance=user)
+        # print(form)
+        print(form.is_valid())
+        if form.is_valid():
+            print(form.cleaned_data)
+            form.save()
+            return redirect('payapp:index')
+        context['form'] = form
+    return render(request,'payapp/accountant_update.html',context)
+
+def accountant_details(request):
+    return render(request,'payapp/accountant_details.html')

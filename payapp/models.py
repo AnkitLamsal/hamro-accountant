@@ -4,6 +4,7 @@ from django.core.validators import MaxValueValidator, MinValueValidator
 # Create your models here.
 
 class Accountant(models.Model):
+    is_admin = models.BooleanField(default=False)
     accountant = models.OneToOneField(User, on_delete=models.CASCADE)
     def __str__(self):
         return f'{self.accountant}'

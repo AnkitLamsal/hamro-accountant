@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect
 from django.urls import reverse,reverse_lazy
-from ..forms import UserEmployeeForm, EmployeeForm
+from ..forms import UserEmployeeForm, EmployeeForm, UserEditForm
 import stripe
 from ..models import Employee
 from django.contrib.auth.decorators import login_required
@@ -40,3 +40,29 @@ def view_employee(request):
     employees = Employee.objects.all()
     context['employees']= employees
     return render(request,'payapp/employee_list.html',context)
+
+
+def employee_update(request):
+    context = {}
+    user = request.user
+    if request.method == "GET":
+        form = UserEditForm(instance=user)
+        employee = user.employee
+        user_form = EmployeeForm(instance = employee)
+        context['form'] = form
+        context['employee_form'] = user_form
+    elif request.method == "POST":
+        form = UserEditForm(request.POST, instance=user)
+        employee = user.employee        
+        user_form = EmployeeForm(request.POST,instance =  employee)
+        if form.is_valid() and user_form.is_valid():
+            # print(form.cleaned_data)
+            form.save()
+            user_form.save()
+            return redirect('payapp:index')
+        context['form'] = form
+        context['employee_form'] = user_form
+    return render(request,'payapp/employee_update.html',context)
+
+def employee_details(request):
+    return render(request,'payapp/employee_details.html')

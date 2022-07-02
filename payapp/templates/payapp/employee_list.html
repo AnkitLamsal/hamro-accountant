@@ -1,13 +1,18 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.1/dist/css/bootstrap.min.css" integrity="sha384-zCbKRCUGaJDkqS1kPbPd7TveP5iyJE0EjAuZQTgFLD2ylzuqKfdKlfG/eSrtxUkn" crossorigin="anonymous">
 
+<a href="{% url 'payapp:employee_create'%}">Create Employee</a>
+<a href="{% url 'payapp:index'%}">Home</a>
+
 <table>
-    <a href="{% url 'payapp:employee_create'%}">Create Position</a>
     <tr>
         <th>Id</th>
         <th>Employee Name</th>
         <th>Provident Fund %</th>
         <th>Stripe Account Number</th>
         <th>Position</th>
+        {% if user.is_staff %}
+        <th>Pay Salary</th>
+        {% endif %}
     </tr>
     {% for employee in employees %}
         <tr>
@@ -17,6 +22,9 @@
             <td>{{employee.pf_percent}}</td>
             <td>{{employee.strip_account_id}}</td>
             <td><a href="{% url 'payapp:position_detail' employee.position.id%}">{{employee.position}}</a></td>
+            {% if user.is_staff %}
+            <td>Pay Salary</td>
+            {% endif %}        
         </tr>
     {% endfor%}
 </table>
