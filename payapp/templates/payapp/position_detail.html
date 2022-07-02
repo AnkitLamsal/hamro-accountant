@@ -1,0 +1,25 @@
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.1/dist/css/bootstrap.min.css" integrity="sha384-zCbKRCUGaJDkqS1kPbPd7TveP5iyJE0EjAuZQTgFLD2ylzuqKfdKlfG/eSrtxUkn" crossorigin="anonymous">
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Detail</title>
+</head>
+<body>
+<h3>Position Detail</h3>
+{#{% if obj %}#}
+
+    <h5>ID: {{object.id}}</h5>
+    <h5>Position Name: {{object.position_name}}</h5>
+    <h5>Base Salary: {{object.base_salary}}</h5>
+    <h5>Travelling Allowance: {{object.tada}}</h5>
+    <h5>Position Details: {{object.position_details}}</h5>
+
+    <a href="{% url 'payapp:position_update' object.id%}">Update</a> <br>
+
+    {% comment %} <form action="/demo-11/delete/{{u.id}}/" method="post" id="form_delete">
+        {% csrf_token %}
+    <a href="#" onclick="document.getElementById('form_delete').submit()">Delete</a>
+        </form>  {% endcomment %}
+</body>
+</html>

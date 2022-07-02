@@ -20,7 +20,19 @@ class UserStaffForm(UserCreationForm):
         return user
     
 class PositionForm(forms.ModelForm):
-    class meta:
+    class Meta:
         model = Position
         fields = "__all__"
     
+
+class UserEmployeeForm(UserCreationForm):
+    email = forms.EmailField()
+    class meta:
+        model = User
+        fields = ['email','username','password1','password2']
+    def save(self, commit=True):
+        user = super(UserStaffForm, self).save(commit=False)
+        user.email = self.cleaned_data['email']
+        if commit:
+            user.save()
+        return user

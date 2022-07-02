@@ -16,3 +16,11 @@ class Position(models.Model):
 
     def __str__(self):
         return f'{self.position_name}'
+
+class Employee(models.Model):
+    position = models.ForeignKey(Position, on_delete= models.PROTECT)
+    employee = models.OneToOneField(User, on_delete=models.CASCADE)
+    accountant = models.ForeignKey(Accountant, on_delete= models.CASCADE)
+    pf_percent = models.FloatField(default=10.0,validators=[MinValueValidator(10.0),MaxValueValidator(20.0)])    
+    strip_account_id = models.CharField(max_length=100)
+    

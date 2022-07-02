@@ -1,9 +1,11 @@
 from django.shortcuts import render
 from django.http import HttpResponse
-from .forms import UserStaffForm
+from ..forms import UserStaffForm, PositionForm
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth import login, authenticate
-from .models import Accountant
+from ..models import Accountant, Position
+from django.views.generic import CreateView, ListView, DetailView, DeleteView,UpdateView
+from django.urls import reverse,reverse_lazy
 # Create your views here.
 
 def index(request):
@@ -20,24 +22,6 @@ def accountant_creation(request):
         user_form = UserStaffForm()
     context = {'user':user_form}
     return render(request, 'payapp/accountant_register.html',context)
-
-
-# def login_user(request):        
-#     if request.method == "POST":
-#         form = AuthenticationForm(request.POST)
-#         print('form')
-#         if form.is_valid():
-#             print('valid form')
-#             username = form.cleaned_data['username']
-#             password = form.cleaned_data['password']       
-#             user = authenticate(username=username, password=password)
-#             if user is None:
-#                 print('jel')
-#     elif request.method == "GET":
-#         form = AuthenticationForm()
-#     context = {'user':form}
-#     return render(request, 'payapp/accountant_register.html',context)
-        
         
 def login_user(request):
     if request.method == "POST":
@@ -54,13 +38,25 @@ def login_user(request):
             form = AuthenticationForm()
     context = {'user':form}
     return render(request, 'payapp/accountant_register.html',context)
-# 				messages.info(request, f"You are now logged in as {username}.")
-# 				return redirect("main:homepage")
-# 			else:
-# 				messages.error(request,"Invalid username or password.")
-# 		else:
-# 			messages.error(request,"Invalid username or password.")
-# 	form = AuthenticationForm()
-# 	return render(request=request, template_name="main/login.html", context={"login_form":form})
+
+
+class PositionCreateView(CreateView):
+    model = Position
+    form_class = PositionForm
+    success_url = reverse_lazy('payapp:position_list')
     
+
+class PositionListView(ListView):
+    model = Position
+    context_object_name = 'positions'
     
+class PositionDetailView(DetailView):
+    model = Position
+    pk_url_kwarg= 'id'
+    context_object_name='object'
+
+class PositionUpdateView(UpdateView):
+    model = Position
+    form_class = PositionForm
+    pk_url_kwarg= 'id'
+    success_url = reverse_lazy('payapp:position_list')
