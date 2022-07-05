@@ -15,7 +15,14 @@ from payapp.views.accountant_and_position import (index,
 from payapp.views.employee import (employee_creation, 
                                    view_employee, 
                                    employee_update,
-                                   employee_details)
+                                   employee_details,
+                                   payment_create,
+                                   show_employee_balance,
+                                   PaymentListView,
+                                   view_transaction_details,
+                                   UserListView,
+                                   show_beruju,
+                                   )
 app_name="payapp"
 
 urlpatterns = [
@@ -40,4 +47,14 @@ urlpatterns = [
     path('login/',login_user, name='login'),
     path('logout/',logout_view,name='logout'),
     # Payments related
+    path('payments/create/',payment_create,name='payment_create'),
+    path('payments/',PaymentListView.as_view(),name='payment_list'),
+    # Employee balance
+    path('balance/<int:id>/',show_employee_balance, name='balance'),
+    #Salary Transaction
+    path('transaction/<int:id>/',view_transaction_details,name='transaction'),
+    # User list
+    path('users/',UserListView.as_view(),name='users_list'),
+    # Beruju
+    path('beruju/<int:id>/',show_beruju,name='beruju_show')
 ]

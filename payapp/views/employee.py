@@ -1,9 +1,14 @@
 from django.shortcuts import render, redirect
 from django.urls import reverse,reverse_lazy
-from ..forms import UserEmployeeForm, EmployeeForm, UserEditForm
+from django.http import HttpResponse, JsonResponse
+from ..forms import PaymentForm, UserEmployeeForm, EmployeeForm, UserEditForm
 import stripe
-from ..models import Employee
+from ..models import Employee, Payment
 from django.contrib.auth.decorators import login_required
+from django.views.generic import ListView
+from django.contrib.auth.models import User
+import datetime
+
 
 
 stripe.api_key = "sk_test_51LFDP4IhxTYC5XjyJ4mJo4Zc48CSnR89ZPCb4RRqdBALg1cQQajUZWFV1m3GvxJlLQOvNQo3AYGOXyxO8F7UpPaY00Gdo1cwvA"
@@ -66,3 +71,117 @@ def employee_update(request):
 
 def employee_details(request):
     return render(request,'payapp/employee_details.html')
+
+
+def payment_create(request):
+    context = {}
+    payment = PaymentForm(accountant=request.user.accountant)
+    if request.method == "POST":
+        payment = PaymentForm(request.user.accountant,request.POST)
+        print(payment.is_valid())
+        if(payment.is_valid()):
+            accountant = request.user.accountant
+            (tax_amount,
+             pf_amount,
+             user_salary,
+             employee,
+             pf_percent,
+             payment_month) = deduct_amount(payment.cleaned_data)
+            today = datetime.date.today() 
+            pay = Payment.objects.create(
+                tax_amount = tax_amount,
+                pf_amount = pf_amount,
+                payment_pf_percent = pf_percent,
+                user_salary=user_salary,
+                accountant = accountant,
+                employee=employee,
+                payment_date=today,
+                payment_month = payment_month   
+            )
+            print(pay)
+            return redirect('payapp:index')
+    elif request.method == "GET":
+        context['form'] = payment
+    return render(request,'payapp/payment_create.html',context)
+
+
+def deduct_amount(form):
+    employee = form['employee']
+    total_salary = form['total_salary']
+    payment_month = form['payment_month']
+    pf_percent = employee.pf_percent
+    print(pf_percent)
+    print(f'Total Salary: {total_salary}')
+    pf_amount = ((pf_percent)/100)*(total_salary)
+    print(f'Provident Fund Amount:{pf_amount}')
+    deducted_salary = total_salary - pf_amount
+    print(f'Deducted Salary:{deducted_salary}')
+    tax_amount = (1/100)*(deducted_salary)
+    print(f'Tax amount: {tax_amount}')
+    print(employee)
+    user_salary = deducted_salary - tax_amount
+    return tax_amount,pf_amount,user_salary,employee,pf_percent,payment_month
+
+
+class PaymentListView(ListView):
+    model = Payment
+    context_object_name = 'payments'
+    
+class UserListView(ListView):
+    template_name = "payapp/user_list.html"
+    model = User
+    context_object_name = 'users'
+    
+    
+def show_employee_balance(request,id):
+    payments = Payment.objects.filter(employee = id)
+    context = {}
+    total_salary = 0.0
+    total_provident_fund = 0.0
+    total_tax = 0.0
+    for payment in payments:
+        total_salary += payment.user_salary
+        total_provident_fund += payment.pf_amount
+        total_tax += payment.tax_amount
+    context['total_salary'] = total_salary
+    context['total_provident_fund'] = total_provident_fund
+    context['total_tax'] = total_tax
+    return render(request, 'payapp/balance_view.html',context)
+
+
+def view_transaction_details(request,id):
+    context = {}
+    transaction = Payment.objects.filter(employee = id)
+    context['transactions'] = transaction
+    return render(request,'payapp/salary_list.html',context)
+
+
+
+def show_beruju(request,id):
+    if request.is_ajax and request.method == "GET":
+        print(request)
+        months = []
+        total_salaries = []
+        for payment in  Payment.objects.filter(employee=id):
+            pf_deducted = payment.user_salary + payment.tax_amount
+            total_salary = pf_deducted + payment.pf_amount
+            total_salaries.append(total_salary)
+            month = payment.payment_month
+            months.append(month)
+        total_month = sum(months)
+        net_salary = sum(total_salaries)
+        x = Employee.objects.get(id = id)
+        print(x.employee)
+        base_salary = x.position.base_salary
+        print(net_salary,total_month)
+        print(base_salary)
+        context = {}
+        if(base_salary*total_month < net_salary):
+            context['beruju'] = "yes"
+            context['beruju_amount'] = net_salary - base_salary*total_month
+        elif (base_salary*total_month == net_salary):
+            context['beruju'] = 'equal'
+        else:
+            context['beruju'] = 'no'
+        return JsonResponse(context, status = 200)
+    return redirect('payapp:employee_list')

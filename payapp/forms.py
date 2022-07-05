@@ -4,7 +4,7 @@ from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
 from django.contrib.auth import get_user_model
-from .models import Employee, Position
+from .models import Employee, Payment, Position
 
 class UserStaffForm(UserCreationForm):
     email = forms.EmailField()
@@ -80,3 +80,21 @@ class UserEditForm(forms.ModelForm):
         if commit:
             user.save()
         return user  
+    
+class PaymentForm(forms.ModelForm):
+    total_salary = forms.FloatField()
+    class Meta:
+        model = Payment
+        fields = ['employee','total_salary','payment_month']
+    
+    def clean_total_salary(self):
+        total_salary = self.cleaned_data.get('total_salary')
+        if(total_salary<0.0):
+            raise forms.ValidationError("Salary Cannot be Negative.")
+        else:
+            return total_salary
+        
+    def __init__(self,accountant,*args,**kwargs):
+        super(PaymentForm,self).__init__(*args,**kwargs)
+        self.fields['employee'].queryset = Employee.objects.filter(accountant=accountant)
+        self.fields['payment_month'].label = 'How much months Salary ? '

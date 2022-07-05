@@ -1,4 +1,13 @@
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.1/dist/css/bootstrap.min.css" integrity="sha384-zCbKRCUGaJDkqS1kPbPd7TveP5iyJE0EjAuZQTgFLD2ylzuqKfdKlfG/eSrtxUkn" crossorigin="anonymous">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.1/dist/css/bootstrap.min.css"
+    integrity="sha384-zCbKRCUGaJDkqS1kPbPd7TveP5iyJE0EjAuZQTgFLD2ylzuqKfdKlfG/eSrtxUkn" crossorigin="anonymous">
+{% comment %} <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script> {% endcomment %}
+
+
+<style>
+    .beruju{
+        display:none;
+    }
+</style>
 
 <a href="{% url 'payapp:employee_create'%}">Create Employee</a>
 <a href="{% url 'payapp:index'%}">Home</a>
@@ -9,22 +18,48 @@
         <th>Employee Name</th>
         <th>Provident Fund %</th>
         <th>Stripe Account Number</th>
-        <th>Position</th>
-        {% if user.is_staff %}
-        <th>Pay Salary</th>
-        {% endif %}
+        <th>Beruju Status</th>
     </tr>
     {% for employee in employees %}
-        <tr>
-            <td>{{employee.id}}</td>
-            {% comment %} {% url 'payapp:position_detail' position.id%} {% endcomment %}
-            <td><a href="#">{{employee.employee}}</a></td>
-            <td>{{employee.pf_percent}}</td>
-            <td>{{employee.strip_account_id}}</td>
-            <td><a href="{% url 'payapp:position_detail' employee.position.id%}">{{employee.position}}</a></td>
-            {% if user.is_staff %}
-            <td>Pay Salary</td>
-            {% endif %}        
-        </tr>
+    <tr>
+        <td>{{employee.id}}</td>
+        <td><a href="#">{{employee.employee}}</a></td>
+        <td>{{employee.pf_percent}}</td>
+        <td>{{employee.strip_account_id}}</td>
+        <td>
+            <input type="button" class="btn btn-primary id-{{employee.id}}" value="Check Beruju"
+                onclick="submit({id: {{employee.id}}})" />
+            
+            <div class="beruju-{{employee.id}}">
+            </div>
+        </td>
+    </tr>
     {% endfor%}
 </table>
+<script>
+    function submit({
+        id
+    }) {
+        fetch(`/beruju/${id}/`)
+            .then(response => response.json())
+            .then(data => manipulate(data,id))
+    };
+    function manipulate(data,id){
+        console.log(data);
+        console.log(id);
+        beruju_button = document.querySelector(`.id-${id}`);
+        beruju_button.style.display = "none";
+        beruju = document.querySelector(`.beruju-${id}`);
+        if(data['beruju']=="yes"){
+            beruju.innerText = `Yes.\n Beruju Amount: ${data['beruju_amount']}`;
+        }
+        else if(data['beruju']=='equal'){
+            beruju.innerText = `No Beruju.`;
+        }
+        else{
+            beruju.innerText = `Underpaid.`;
+        }
+        //
+        //document.querySelector('.beruju_hide').style.display = "block";
+    }
+</script>

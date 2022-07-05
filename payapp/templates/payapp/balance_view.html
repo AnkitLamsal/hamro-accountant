@@ -1,0 +1,25 @@
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.1/dist/css/bootstrap.min.css" integrity="sha384-zCbKRCUGaJDkqS1kPbPd7TveP5iyJE0EjAuZQTgFLD2ylzuqKfdKlfG/eSrtxUkn" crossorigin="anonymous">
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Employee Balance</title>
+</head>
+<body>
+<h3>{{user}} balance</h3>
+{#{% if obj %}#}
+
+    <h5>Employee ID: {{user.employee.id}}</h5>
+    <h5>User Name: {{user}}</h5>
+    <h5>Total Salary Balance: {{total_salary}}</h5>
+    <h5>Provident Fund Amount: {{total_provident_fund}}</h5>
+    <h5>Deducted Tax amount: {{total_tax}}</h5>
+
+    <a href="{% url 'payapp:transaction' user.employee.id%}">Transaction Details</a> <br>
+
+    {% comment %} <form action="/demo-11/delete/{{u.id}}/" method="post" id="form_delete">
+        {% csrf_token %}
+    <a href="#" onclick="document.getElementById('form_delete').submit()">Delete</a>
+        </form>  {% endcomment %}
+</body>
+</html>

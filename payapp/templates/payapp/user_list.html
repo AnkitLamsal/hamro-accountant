@@ -1,0 +1,26 @@
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.1/dist/css/bootstrap.min.css" integrity="sha384-zCbKRCUGaJDkqS1kPbPd7TveP5iyJE0EjAuZQTgFLD2ylzuqKfdKlfG/eSrtxUkn" crossorigin="anonymous">
+<h1>Users</h1>
+<table>
+    <tr>
+        <th>Id</th>
+        <th>User Name</th>
+        <th>Status</th>
+    </tr>
+    {% for user in users %}
+        <tr>
+            <td>{{user.id}}</td>
+            <td>{{user.username}}</td>
+            <td>
+                {% if user.is_superuser %}
+                    Super User 
+                {% elif user.accountant.is_admin %}
+                    Admin
+                {% elif user.accountant %}
+                    Accountant
+                {% else %}
+                    Employee
+                {% endif %}
+            </td>
+        </tr>
+    {% endfor%}
+</table>

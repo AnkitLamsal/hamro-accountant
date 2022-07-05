@@ -1,3 +1,4 @@
+from tokenize import blank_re
 from django.db import models
 from django.contrib.auth.models import User
 from django.core.validators import MaxValueValidator, MinValueValidator
@@ -11,9 +12,8 @@ class Accountant(models.Model):
     
 class Position(models.Model):
     position_name = models.CharField(max_length=50, unique=True)
-    position_details = models.TextField(max_length=200, null=True)
+    position_details = models.TextField(max_length=200)
     base_salary = models.PositiveIntegerField()
-    tada = models.FloatField(default = 10000, validators=[MinValueValidator(0.0)])
 
     def __str__(self):
         return f'{self.position_name}'
@@ -23,7 +23,17 @@ class Employee(models.Model):
     employee = models.OneToOneField(User, on_delete=models.CASCADE)
     accountant = models.ForeignKey(Accountant, on_delete= models.CASCADE)
     pf_percent = models.FloatField(default=10.0,validators=[MinValueValidator(10.0),MaxValueValidator(20.0)])    
-    strip_account_id = models.CharField(max_length=100,blank=True, null=True)
+    strip_account_id = models.CharField(max_length=100)
     def __str__(self):
         return f'{self.employee}'
     
+class Payment(models.Model):
+    tax_amount = models.FloatField(validators=[MinValueValidator(0.0)])
+    pf_amount = models.FloatField(validators=[MinValueValidator(0.0)])
+    payment_pf_percent = models.FloatField(validators=[MinValueValidator(10.0),MaxValueValidator(20.0)])
+    user_salary = models.FloatField(validators=[MinValueValidator(0.0)])
+    accountant = models.ForeignKey(Accountant, on_delete=models.CASCADE)
+    employee = models.ForeignKey(Employee,on_delete=models.CASCADE)
+    stripe_transaction_id = models.CharField(max_length=100,unique=True,blank=True,null=True)
+    payment_date = models.DateField()
+    payment_month = models.PositiveIntegerField(validators=[MinValueValidator(1)])
