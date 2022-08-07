@@ -28,12 +28,16 @@ class Employee(models.Model):
         return f'{self.employee}'
     
 class Payment(models.Model):
-    tax_amount = models.FloatField(validators=[MinValueValidator(0.0)])
-    pf_amount = models.FloatField(validators=[MinValueValidator(0.0)])
     payment_pf_percent = models.FloatField(validators=[MinValueValidator(10.0),MaxValueValidator(20.0)])
-    user_salary = models.FloatField(validators=[MinValueValidator(0.0)])
+    pf_amount = models.FloatField(validators=[MinValueValidator(0.0)])
+    user_salary = models.PositiveIntegerField()    
+    payment_month = models.PositiveIntegerField(validators=[MinValueValidator(1)])
+    paid_salary = models.FloatField(validators=[MinValueValidator(0.0)])
+    payment_date = models.DateField()
+    tax_amount = models.FloatField(validators=[MinValueValidator(0.0)])
+    stripe_transaction_id = models.CharField(max_length=100,unique=True)
     accountant = models.ForeignKey(Accountant, on_delete=models.CASCADE)
     employee = models.ForeignKey(Employee,on_delete=models.CASCADE)
-    stripe_transaction_id = models.CharField(max_length=100,unique=True,blank=True,null=True)
-    payment_date = models.DateField()
-    payment_month = models.PositiveIntegerField(validators=[MinValueValidator(1)])
+
+    def __str__(self):
+        return f'{str(self.employee) +"  "+ self.stripe_transaction_id}'

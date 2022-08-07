@@ -9,6 +9,7 @@ from django.views.generic import ListView
 from django.contrib.auth.models import User
 import datetime
 from django.views.generic import CreateView
+from django.utils.decorators import method_decorator
 
 
 stripe.api_key = "sk_test_51LFDP4IhxTYC5XjyJ4mJo4Zc48CSnR89ZPCb4RRqdBALg1cQQajUZWFV1m3GvxJlLQOvNQo3AYGOXyxO8F7UpPaY00Gdo1cwvA"
@@ -76,6 +77,7 @@ class PayementCreateView(CreateView):
     model = Payment
     form_class = PaymentForm
     template_name = 'payapp/payment_create.html'
+    # template_name = 'payapp/create_payment.html'
     success_url = reverse_lazy('payapp:index')
 
     def get_form(self, form_class=None):
@@ -100,93 +102,55 @@ class PayementCreateView(CreateView):
         accountant = self.request.user.accountant
         (tax_amount,
         pf_amount,
-        user_salary,
+        paid_salary,
         employee,
         pf_percent,
-        payment_month) = self.deduct_amount(form)
+        payment_month,
+        user_salary) = self.deduct_amount(form)
         today = datetime.date.today()            
-        val = stripe.Transfer.create(amount=int(user_salary),
+        transfer_dict = stripe.Transfer.create(amount=int(paid_salary),
                              currency="usd",
                              destination=employee.strip_account_id,
-                                ) 
+                                )
         pay = self.model.objects.create(
-                tax_amount = tax_amount,
-                pf_amount = pf_amount,
-                payment_pf_percent = pf_percent,
-                user_salary=user_salary,
-                accountant = accountant,
-                employee=employee,
-                payment_date=today,
-                payment_month = payment_month   
+            payment_pf_percent = pf_percent,
+            pf_amount = pf_amount,
+            user_salary = user_salary,
+            payment_month = payment_month,
+            paid_salary = paid_salary,
+            payment_date = today,
+            tax_amount = tax_amount,
+            stripe_transaction_id = transfer_dict.id,
+            accountant = accountant,
+            employee = employee 
             )
+        print("transfer sucess.")
         return HttpResponseRedirect(reverse_lazy('payapp:index'))
         
     def deduct_amount(self,form):
         '''Custom Function for deducting tax, provident fund and misc tax.'''
-        employee = form['employee']
+        employee_obj = form['employee']
         total_salary = form['total_salary']
         payment_month = form['payment_month']
-        pf_percent = employee.pf_percent
-        print(pf_percent)
-        print(f'Total Salary: {total_salary}')
+        pf_percent = employee_obj.pf_percent
         pf_amount = ((pf_percent)/100)*(total_salary)
-        print(f'Provident Fund Amount:{pf_amount}')
         deducted_salary = total_salary - pf_amount
-        print(f'Deducted Salary:{deducted_salary}')
         tax_amount = (1/100)*(deducted_salary)
-        print(f'Tax amount: {tax_amount}')
-        print(employee)
-        user_salary = deducted_salary - tax_amount
-        return tax_amount,pf_amount,user_salary,employee,pf_percent,payment_month 
-
-
-# def payment_create(request):
-#     context = {}
-#     payment = PaymentForm(accountant=request.user.accountant)
-#     if request.method == "POST": 
-#         payment = PaymentForm(request.user.accountant,request.POST)
-#         print(payment.is_valid())
-#         if(payment.is_valid()):
-#             accountant = request.user.accountant
-#             (tax_amount,
-#              pf_amount,
-#              user_salary,
-#              employee,
-#              pf_percent,
-#              payment_month) = deduct_amount(payment.cleaned_data)
-#             today = datetime.date.today()            
-#             val = stripe.Transfer.create(amount=int(user_salary),
-#                              currency="usd",
-#                              destination=employee.strip_account_id,
-#                                 ) 
-#             pay = Payment.objects.create(
-#                 tax_amount = tax_amount,
-#                 pf_amount = pf_amount,
-#                 payment_pf_percent = pf_percent,
-#                 user_salary=user_salary,
-#                 accountant = accountant,
-#                 employee=employee,
-#                 payment_date=today,
-#                 payment_month = payment_month   
-#             )
-#             print(pay)
-#             return redirect('payapp:index')
-#     elif request.method == "GET":
-#         context['form'] = payment
-#     return render(request,'payapp/payment_create.html',context)
-
-
-
-
+        paid_salary = deducted_salary - tax_amount
+        user_salary = employee_obj.position.base_salary
+        return tax_amount,pf_amount,paid_salary,employee_obj,pf_percent,payment_month,user_salary  
 
 
 
 class PaymentListView(ListView):
     model = Payment
     context_object_name = 'payments'
-    
+    # template_name = "payapp/list_paym,.html"
+
+@method_decorator(login_required(login_url=reverse_lazy('payapp:login')),name="dispatch")    
 class UserListView(ListView):
     template_name = "payapp/user_list.html"
+    # template_name = "payapp/list_user.html"
     model = User
     context_object_name = 'users'
     
@@ -198,7 +162,7 @@ def show_employee_balance(request,id):
     total_provident_fund = 0.0
     total_tax = 0.0
     for payment in payments:
-        total_salary += payment.user_salary
+        total_salary += payment.paid_salary
         total_provident_fund += payment.pf_amount
         total_tax += payment.tax_amount
     context['total_salary'] = total_salary
@@ -217,29 +181,31 @@ def view_transaction_details(request,id):
 
 def show_beruju(request,id):
     if request.method == "GET":
-        print(request)
-        months = []
-        total_salaries = []
-        for payment in  Payment.objects.filter(employee=id):
-            pf_deducted = payment.user_salary + payment.tax_amount
-            total_salary = pf_deducted + payment.pf_amount
-            total_salaries.append(total_salary)
-            month = payment.payment_month
-            months.append(month)
-        total_month = sum(months)
-        net_salary = sum(total_salaries)
-        x = Employee.objects.get(id = id)
-        print(x.employee)
-        base_salary = x.position.base_salary
-        print(net_salary,total_month)
-        print(base_salary)
+        employee = Employee.objects.get(id=id)
+        print(employee)
+        transactions = Payment.objects.filter(employee =employee)
+        beruju = 0
+        for pay in transactions:
+            # print(pay.user_salary, pay.paid_salary, pay.payment_month)
+            # Change to deducted_salary
+            deducted_salary = pay.paid_salary + pay.tax_amount
+            # print(deducted_salary)
+            # change to total_salary
+            total_salary = deducted_salary + pay.pf_amount
+            # print(total_salary)
+            if(pay.payment_month>1):
+                # print(pay.user_salary, pay.payment_month)
+                to_be_salary = pay.user_salary*pay.payment_month
+            else:
+                to_be_salary = pay.user_salary
+            salary_gap = total_salary - to_be_salary
+            beruju +=salary_gap
+        print(beruju)
         context = {}
-        if(base_salary*total_month < net_salary):
+        if(beruju > 0 ):
             context['beruju'] = "yes"
-            context['beruju_amount'] = net_salary - base_salary*total_month
-        elif (base_salary*total_month == net_salary):
-            context['beruju'] = 'equal'
+            context['beruju_amount'] = beruju
         else:
-            context['beruju'] = 'no'
+            context['beruju'] = 'No Beruju'
         return JsonResponse(context, status = 200)
     return redirect('payapp:employee_list')

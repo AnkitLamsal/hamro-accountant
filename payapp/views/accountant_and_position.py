@@ -18,7 +18,7 @@ from django.contrib.auth import update_session_auth_hash
 # Create your views here.
 
 def index(request):
-    return render(request, 'payapp/home_page.html');
+    return render(request, 'payapp/index.html');
 
 def accountant_creation(request): 
     if request.method == "POST":
@@ -32,7 +32,7 @@ def accountant_creation(request):
     elif request.method =="GET":
         user_form = UserStaffForm()
     context = {'user':user_form}
-    return render(request, 'payapp/accountant_register.html',context)
+    return render(request, 'payapp/signup.html',context)
         
 def login_user(request):
     if request.method == "POST":
@@ -49,7 +49,7 @@ def login_user(request):
     elif request.method == "GET":
             form = AuthenticationForm()
     context = {'user':form}
-    return render(request, 'payapp/accountant_register.html',context)
+    return render(request, 'payapp/login.html',context)
 
 
 @method_decorator(login_required(login_url=reverse_lazy('payapp:login')),name="dispatch")
@@ -57,18 +57,20 @@ class PositionCreateView(CreateView,LoginRequiredMixin):
     model = Position
     form_class = PositionForm
     success_url = reverse_lazy('payapp:position_list')
-    # login_url = reverse_lazy('payapp:login')
+    template_name = 'payapp/position_create.html'
     
 @method_decorator(login_required(login_url=reverse_lazy('payapp:login')),name="dispatch")
 class PositionListView(ListView):
     model = Position
     context_object_name = 'positions'
+    # template_name = 'payapp/list_position.html'
 
 @method_decorator(login_required(login_url=reverse_lazy('payapp:login')),name="dispatch")
 class PositionDetailView(LoginRequiredMixin,DetailView):
     model = Position
     pk_url_kwarg= 'id'
     context_object_name='object'
+    # template_name = "payapp/detail_position.html"
 
 @method_decorator(login_required(login_url=reverse_lazy('payapp:login')),name="dispatch")
 class PositionUpdateView(LoginRequiredMixin,UpdateView):
@@ -95,7 +97,8 @@ def change_password(request):
             messages.error(request, 'Please correct the error below.')
     else:
         form = PasswordChangeForm(request.user)
-    return render(request, 'payapp/change_password.html', {'form':form})
+    context = {'form':form}
+    return render(request, 'payapp/change_password.html', context)
 
 
 def accountant_update(request):
@@ -113,7 +116,9 @@ def accountant_update(request):
             form.save()
             return redirect('payapp:index')
         context['form'] = form
-    return render(request,'payapp/accountant_update.html',context)
+    file_path = 'payapp/accountant_update.html'
+    # file_path = 'payapp/update_accountant.html'
+    return render(request,file_path,context)
 
 def accountant_details(request):
     return render(request,'payapp/accountant_details.html')
