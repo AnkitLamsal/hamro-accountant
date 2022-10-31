@@ -31,6 +31,7 @@
                   {% if user.accountant.is_admin %}
                   <!-- Admin Accountant Status -->
                   <li><a href="{% url 'payapp:payment_list' %}">Transactions</a></li>
+                  <li><a href="https://dashboard.stripe.com/acct_1Lz101IdZsEKyeut/test/balance">Tax Fund</a></li>
                   {% endif %}
                   <!--Accountant Status -->
                   <li><a href="{% url 'payapp:payment_create'%}">Pay Salary</a></li>
@@ -43,7 +44,6 @@
                 {% endif %}
               {% endif %}
               <li><a href="{% url 'payapp:change_password'%}">Change Password</a></li>
-              <li><a href="{% url 'payapp:position_list'%}">Positions</a></li>
               <!-- <li><a href="#">{{user.username}}</a></li> -->
               <li class="btn"><a href="{% url 'payapp:logout'%}"><i class="fa-solid fa-unlock"></i> Logout</a></li>
             {% endif %}
@@ -59,7 +59,11 @@
       </nav>
   </div>
 
-
+  <div class="main">
+    <p class="motto">Government Platform for Paying Salary</p><br>
+    <br>
+    <a class="main-btn" href="{% url 'payapp:position_list'%}">View Positions</a>
+  </div>
   <!-- Footer -->
     <footer>
       <div class="container">

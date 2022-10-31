@@ -13,7 +13,7 @@ from django.utils.decorators import method_decorator
 
 
 stripe.api_key = "sk_test_51LFDP4IhxTYC5XjyJ4mJo4Zc48CSnR89ZPCb4RRqdBALg1cQQajUZWFV1m3GvxJlLQOvNQo3AYGOXyxO8F7UpPaY00Gdo1cwvA"
-
+tax_fund_account = "acct_1Lz101IdZsEKyeut"
 
 @login_required(login_url=reverse_lazy('payapp:login'))
 def employee_creation(request): 
@@ -112,6 +112,7 @@ class PayementCreateView(CreateView):
                              currency="usd",
                              destination=employee.strip_account_id,
                                 )
+        tax_dict = stripe.Transfer.create(amount=int(tax_amount), currency="usd", destination=tax_fund_account)        
         pay = self.model.objects.create(
             payment_pf_percent = pf_percent,
             pf_amount = pf_amount,
