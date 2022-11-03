@@ -78,6 +78,7 @@ class PositionUpdateView(LoginRequiredMixin,UpdateView):
     form_class = PositionForm
     pk_url_kwarg= 'id'
     success_url = reverse_lazy('payapp:position_list')
+
     
     
 @login_required

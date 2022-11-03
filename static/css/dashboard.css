@@ -351,8 +351,9 @@ footer p {
     margin:0 auto;
     font-size: 3rem;
 }
-.thead{
- 
+.visited{
+    color:#0078AA;
+    text-decoration: none;
 }
 
 .th{

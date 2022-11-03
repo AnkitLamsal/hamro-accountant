@@ -72,7 +72,7 @@
                 <div class="tr">
                     <div class="td td-1">{{transaction.id}}</div>
                     <!-- https://dashboard.stripe.com/acct_1LRlMdRSEYUYJsIW/test/payments/ -->
-                    <div class="td td-2">{{transaction.stripe_transaction_id}}</div>
+                    <div class="td td-2"><a class="visited" href="https://dashboard.stripe.com/test/connect/transfers/{{transaction.stripe_transaction_id}}">{{transaction.stripe_transaction_id}}</a></div>
                     <div class="td td-3">
                         {{transaction.paid_salary}}
                     </div>
